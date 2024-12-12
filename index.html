@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Firebase Auth Example</title>
+    <style>
+        /* Add your styles here */
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            background-color: #f5f5f5;
+        }
+        div {
+            background-color: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            margin-top: 20px;
+            width: 300px;
+        }
+        button {
+            margin-top: 10px;
+            width: 100%;
+        }
+        .dashboard-content {
+            display: flex;
+            flex-direction: column;
+        }
+        .dashboard-section {
+            margin-bottom: 20px;
+        }
+        .section-title {
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+    </style>
+</head>
+<body>
+    <!-- Sign Up Form -->
+    <div id="signup" style="display: block;">
+        <h2>Sign Up</h2>
+        <form id="signupForm">
+            <input type="email" id="signupEmail" placeholder="Email" required><br>
+            <input type="password" id="signupPassword" placeholder="Password" required><br>
+            <button type="submit">Sign Up</button>
+        </form>
+        <button id="alreadyHaveAccountBtn">Already have an account? Log in</button>
+    </div>
+
+    <!-- Login Form -->
+    <div id="login" style="display: none;">
+        <h2>Log In</h2>
+        <form id="loginForm">
+            <input type="email" id="loginEmail" placeholder="Email" required><br>
+            <input type="password" id="loginPassword" placeholder="Password" required><br>
+            <button type="submit">Log In</button>
+        </form>
+        <button id="forgotPasswordBtn">Forgot Password?</button>
+    </div>
+
+    <!-- Password Reset Form -->
+    <div id="passwordReset" style="display: none;">
+        <h2>Reset Password</h2>
+        <form id="passwordResetForm">
+            <input type="email" id="resetEmail" placeholder="Enter your email" required><br>
+            <button type="submit">Send Reset Link</button>
+        </form>
+        <button id="backToLoginBtn">Back to Login</button>
+    </div>
+
+    <!-- Dashboard -->
+    <div id="dashboard" style="display: none;">
+        <h2>Welcome to Your Dashboard</h2>
+        <p id="userEmail"></p>
+        
+        <div class="dashboard-content">
+            <!-- User Profile Section -->
+            <div class="dashboard-section">
+                <p class="section-title">User Profile</p>
+                <p>Username: <span id="userName"></span></p>
+                <p>Email: <span id="userProfileEmail"></span></p>
+            </div>
+            
+            <!-- User Activity Section -->
+            <div class="dashboard-section">
+                <p class="section-title">Recent Activity</p>
+                <ul id="userActivityFeed">
+                    <li>No recent activity.</li>
+                </ul>
+            </div>
+
+            <!-- Settings Section -->
+            <div class="dashboard-section">
+                <p class="section-title">Settings</p>
+                <button id="updateProfileBtn">Update Profile</button>
+                <button id="changePasswordBtn">Change Password</button>
+            </div>
+        </div>
+
+        <button id="logout">Log Out</button>
+    </div>
+
+    <script type="module">
+        // Import Firebase functions
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-app.js";
+        import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, sendPasswordResetEmail, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-auth.js";
+
+        // Your Firebase configuration
+        const firebaseConfig = {
+            apiKey: "AIzaSyDO6MOHfnePCMG8i2iwQBoI0tsO-bIUdZU",
+            authDomain: "project-1-33fe1.firebaseapp.com",
+            projectId: "project-1-33fe1",
+            storageBucket: "project-1-33fe1.appspot.com",
+            messagingSenderId: "693856360129",
+            appId: "1:693856360129:web:fbe26596625f1b4ac2e640",
+            measurementId: "G-5VMH4HG8CR"
+        };
+
+        // Initialize Firebase
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+
+        // Sign Up Functionality
+        document.getElementById("signupForm").addEventListener("submit", (e) => {
+            e.preventDefault();
+            const email = document.getElementById("signupEmail").value;
+            const password = document.getElementById("signupPassword").value;
+
+            createUserWithEmailAndPassword(auth, email, password)
+                .then((userCredential) => {
+                    alert("Sign up successful!");
+                    document.getElementById("signup").style.display = "none";
+                    document.getElementById("login").style.display = "block";
+                })
+                .catch((error) => {
+                    alert("Error: " + error.message);
+                });
+        });
+
+        // Login Functionality
+        document.getElementById("loginForm").addEventListener("submit", (e) => {
+            e.preventDefault();
+            const email = document.getElementById("loginEmail").value;
+            const password = document.getElementById("loginPassword").value;
+
+            signInWithEmailAndPassword(auth, email, password)
+                .then((userCredential) => {
+                    alert("Login successful!");
+                    document.getElementById("login").style.display = "none";
+                    document.getElementById("dashboard").style.display = "block";
+                    document.getElementById("userEmail").innerText = `Logged in as: ${userCredential.user.email}`;
+                    document.getElementById("userProfileEmail").innerText = userCredential.user.email;
+                    document.getElementById("userName").innerText = userCredential.user.email.split('@')[0]; // Extract the username
+                })
+                .catch((error) => {
+                    alert("Error: " + error.message);
+                });
+        });
+
+        // Logout Functionality
+        document.getElementById("logout").addEventListener("click", () => {
+            signOut(auth)
+                .then(() => {
+                    alert("Logged out successfully!");
+                    // Hide dashboard and show login
+                    document.getElementById("dashboard").style.display = "none";
+                    document.getElementById("login").style.display = "block";
+                    // Clear user data
+                    document.getElementById("userEmail").innerText = "";
+                    document.getElementById("userProfileEmail").innerText = "";
+                    document.getElementById("userName").innerText = "";
+                })
+                .catch((error) => {
+                    alert("Error: " + error.message);
+                });
+        });
+
+        // Password Reset Functionality
+        document.getElementById("passwordResetForm").addEventListener("submit", (e) => {
+            e.preventDefault();
+            const email = document.getElementById("resetEmail").value;
+
+            sendPasswordResetEmail(auth, email)
+                .then(() => {
+                    alert("Password reset email sent! Please check your inbox.");
+                    document.getElementById("passwordReset").style.display = "none";
+                    document.getElementById("login").style.display = "block";
+                })
+                .catch((error) => {
+                    alert("Error: " + error.message);
+                });
+        });
+
+        // Back to Login from Password Reset
+        document.getElementById("backToLoginBtn").addEventListener("click", () => {
+            document.getElementById("passwordReset").style.display = "none";
+            document.getElementById("login").style.display = "block";
+        });
+
+        // Go to Login from Signup
+        document.getElementById("alreadyHaveAccountBtn").addEventListener("click", () => {
+            document.getElementById("signup").style.display = "none";
+            document.getElementById("login").style.display = "block";
+        });
+
+        // Show the password reset form when "Forgot Password?" is clicked
+        document.getElementById("forgotPasswordBtn").addEventListener("click", () => {
+            document.getElementById("login").style.display = "none";
+            document.getElementById("passwordReset").style.display = "block";
+        });
+
+        // Check User Authentication State
+        onAuthStateChanged(auth, (user) => {
+            if (user) {
+                // If user is logged in, show dashboard
+                document.getElementById("signup").style.display = "none";
+                document.getElementById("login").style.display = "none";
+                document.getElementById("dashboard").style.display = "block";
+                document.getElementById("userEmail").innerText = `Logged in as: ${user.email}`;
+                document.getElementById("userProfileEmail").innerText = user.email;
+                document.getElementById("userName").innerText = user.email.split('@')[0]; // Extract the username
+            } else {
+                // If user is not logged in, show sign-up or login form
+                document.getElementById("signup").style.display = "block";
+                document.getElementById("login").style.display = "none";
+                document.getElementById("dashboard").style.display = "none";
+            }
+        });
+    </script>
+</body>
+</html>
